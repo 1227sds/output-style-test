@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>계산기</title>
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --card: #ffffff;
+      --display: #111827;
+      --text: #111827;
+      --key: #e5e7eb;
+      --op: #4f46e5;
+      --op-text: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    }
+
+    .calculator {
+      width: 100%;
+      max-width: 320px;
+      padding: 16px;
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .display {
+      min-height: 80px;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      background: var(--display);
+      color: #f9fafb;
+      font-size: 2.2rem;
+      text-align: right;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    button {
+      height: 56px;
+      border: none;
+      border-radius: 10px;
+      background: var(--key);
+      color: var(--text);
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    button.op {
+      background: var(--op);
+      color: var(--op-text);
+    }
+
+    button.wide {
+      grid-column: span 2;
+    }
+  </style>
+</head>
+<body>
+  <main class="calculator">
+    <div class="display" id="display">0</div>
+
+    <div class="buttons">
+      <button type="button" data-type="clear" class="wide">AC</button>
+      <button type="button" data-type="op" data-value="/" class="op">÷</button>
+      <button type="button" data-type="op" data-value="*" class="op">×</button>
+
+      <button type="button" data-type="digit" data-value="7">7</button>
+      <button type="button" data-type="digit" data-value="8">8</button>
+      <button type="button" data-type="digit" data-value="9">9</button>
+      <button type="button" data-type="op" data-value="-" class="op">−</button>
+
+      <button type="button" data-type="digit" data-value="4">4</button>
+      <button type="button" data-type="digit" data-value="5">5</button>
+      <button type="button" data-type="digit" data-value="6">6</button>
+      <button type="button" data-type="op" data-value="+" class="op">+</button>
+
+      <button type="button" data-type="digit" data-value="1">1</button>
+      <button type="button" data-type="digit" data-value="2">2</button>
+      <button type="button" data-type="digit" data-value="3">3</button>
+      <button type="button" data-type="equals" class="op" style="grid-row: span 2;">=</button>
+
+      <button type="button" data-type="digit" data-value="0" class="wide">0</button>
+      <button type="button" data-type="decimal">.</button>
+    </div>
+  </main>
+
+  <script>
+    const state = {
+      current: "0",     // 화면에 보이는 현재 입력값
+      previous: null,   // 연산자 앞의 값
+      operator: null,   // 대기 중인 연산자
+      overwrite: false, // 다음 숫자 입력 시 current를 교체할지 여부
+    };
+
+    const display = document.getElementById("display");
+
+    function inputDigit(digit) {
+      if (state.overwrite) {
+        state.current = digit;
+        state.overwrite = false;
+      } else if (state.current === "0") {
+        state.current = digit;
+      } else {
+        state.current += digit;
+      }
+    }
+
+    function inputDecimal() {
+      if (state.overwrite) {
+        state.current = "0.";
+        state.overwrite = false;
+        return;
+      }
+      if (!state.current.includes(".")) {
+        state.current += ".";
+      }
+    }
+
+    // TODO(human): 아래 함수는 아직 비어 있습니다. 나중에 채워 주세요.
+    function compute(a, operator, b) {
+      return null;
+    }
+
+    function calculate() {
+      if (state.operator === null || state.previous === null) return;
+
+      const result = compute(parseFloat(state.previous), state.operator, parseFloat(state.current));
+      state.current = result === null ? "Error" : String(result);
+      state.previous = null;
+      state.operator = null;
+      state.overwrite = true;
+    }
+
+    function chooseOperator(operator) {
+      if (state.operator !== null && !state.overwrite) {
+        calculate();
+      }
+      state.previous = state.current;
+      state.operator = operator;
+      state.overwrite = true;
+    }
+
+    function clearAll() {
+      state.current = "0";
+      state.previous = null;
+      state.operator = null;
+      state.overwrite = false;
+    }
+
+    function render() {
+      display.textContent = state.current;
+    }
+
+    document.querySelector(".buttons").addEventListener("click", (event) => {
+      const button = event.target.closest("button");
+      if (!button) return;
+
+      const { type, value } = button.dataset;
+
+      switch (type) {
+        case "digit":
+          inputDigit(value);
+          break;
+        case "decimal":
+          inputDecimal();
+          break;
+        case "op":
+          chooseOperator(value);
+          break;
+        case "equals":
+          calculate();
+          break;
+        case "clear":
+          clearAll();
+          break;
+      }
+
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

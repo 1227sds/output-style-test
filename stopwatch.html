@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>스톱워치</title>
+  <!-- Tailwind CSS: class 이름만 적으면 디자인이 바로 적용되는 CSS 도구 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+
+  <!-- 가운데에 놓이는 흰색 카드 -->
+  <main class="w-full max-w-md rounded-3xl bg-white p-8 shadow-xl text-center">
+    <h1 class="text-2xl font-bold text-slate-700 mb-6">스톱워치</h1>
+
+    <!-- 시간이 표시되는 곳 (JavaScript가 이 글자를 계속 바꿉니다) -->
+    <div id="display" class="font-mono text-6xl font-semibold text-slate-800 mb-8">00:00:00</div>
+
+    <!-- 버튼 영역 -->
+    <div class="flex justify-center gap-4">
+      <button id="startBtn" class="rounded-xl bg-emerald-500 px-8 py-3 font-semibold text-white shadow hover:bg-emerald-600 transition">
+        시작
+      </button>
+      <button id="resetBtn" class="rounded-xl bg-slate-200 px-8 py-3 font-semibold text-slate-700 hover:bg-slate-300 transition">
+        리셋
+      </button>
+    </div>
+  </main>
+
+  <script>
+    // 1. HTML에서 필요한 요소를 찾아 변수에 저장
+    const display = document.getElementById('display');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // 2. 스톱워치의 상태를 기억하는 변수들
+    let elapsed = 0;     // 지금까지 멈춰 있던 시간이 아닌, 누적된 측정 시간 (밀리초)
+    let startTime = 0;   // 현재 달리기 시작한 시각
+    let running = false; // 지금 달리는 중인지 여부
+    let timerId = null;  // 반복 실행 타이머의 번호 (멈출 때 필요)
+
+    // 3. 밀리초(ms)를 "00:00:00" 형식의 문자열로 바꾸는 함수
+    function formatTime(ms) {
+      const totalSeconds = Math.floor(ms / 1000);       // 1000ms = 1초
+      const hours = Math.floor(totalSeconds / 3600);    // 1시간 = 3600초
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      // 한 자리 숫자를 두 자리로 맞춤 (3 -> "03")
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    }
+
+    // 4. 화면에 현재 시간을 그리는 함수
+    function render() {
+      // 달리는 중이라면 "지금 시각 - 시작 시각"을 더해서 현재 시간을 구함
+      const current = elapsed + (running ? Date.now() - startTime : 0);
+      display.textContent = formatTime(current);
+    }
+
+    // 5. 시작: 시각을 기록하고, 0.1초마다 화면을 갱신
+    function start() {
+      running = true;
+      startTime = Date.now();
+      timerId = setInterval(render, 100); // 100ms마다 render() 실행
+      startBtn.textContent = '일시정지';
+    }
+
+    // 6. 일시정지: 지금까지 달린 시간을 누적하고 타이머를 멈춤
+    function pause() {
+      running = false;
+      elapsed += Date.now() - startTime;
+      clearInterval(timerId);
+      render();
+      startBtn.textContent = '시작';
+    }
+
+    // 7. 리셋: 모든 상태를 처음으로 되돌림
+    function reset() {
+      clearInterval(timerId);
+      running = false;
+      elapsed = 0;
+      display.textContent = formatTime(0);
+      startBtn.textContent = '시작';
+    }
+
+    // 8. 버튼을 누르면 위에서 만든 함수를 실행
+    startBtn.addEventListener('click', () => {
+      if (running) {
+        pause(); // 달리는 중이면 일시정지
+      } else {
+        start(); // 멈춰 있으면 시작
+      }
+    });
+
+    resetBtn.addEventListener('click', reset);
+  </script>
+</body>
+</html>
